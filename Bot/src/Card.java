@@ -6,15 +6,23 @@ public class Card {
     private String name;
     private String rarity;
 
-    public int id;
+    public int quantity;
 
-    public Card(String name, String rarity, int id) {
+    public Card(String name, String rarity, int quantity) {
         this.name = name;
         this.rarity = rarity;
-        this.id = id;
+        this.quantity = quantity;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public int getQuantity() {
+        return quantity;
     }
 }

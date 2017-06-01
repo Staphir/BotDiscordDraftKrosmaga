@@ -52,7 +52,8 @@ public class Main extends ListenerAdapter
 
     private int waitChooseCard;
 
-    private User[] players;
+    private ArrayList<User> listUsers;
+    private ArrayList<Player> listPlayers;
     private int nbPlayers;
     private int gamePlayers;
 
@@ -64,6 +65,7 @@ public class Main extends ListenerAdapter
      */
     public static void main(String[] args)
     {
+
         //We construct a builder for a BOT account. If we wanted to use a CLIENT account
         // we would use AccountType.CLIENT
         try
@@ -116,6 +118,10 @@ public class Main extends ListenerAdapter
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
+        //initialisations
+        listUsers = new ArrayList<>();
+        listPlayers = new ArrayList<>();
+
         //These are provided with every event in JDA
         JDA jda = event.getJDA();                       //JDA, the core of the api.
         long responseNumber = event.getResponseNumber();//The amount of discord events that JDA has received since the last reconnect.
@@ -299,37 +305,36 @@ public class Main extends ListenerAdapter
 
         /***********************************************************Commandes Draft***************************************************************/
 
+
         //3ème étape : "inscription" des joueurs et début du draft (MP pour règles + premiers boosters)
-        else if(msg.equals("-player")){
-            if(stepBD)
-            {
-                if(stepNbPlayers)
-                {
-                    if(nbPlayers == 0)
-                    {
-                        channel.sendMessage("La partie est déjà complète").queue();
-                        return;
+        else if(msg.length()>=8) {
+            if (msg.substring(0,8).equals("-player")) {
+                if (stepBD) {
+                    if (stepNbPlayers) {
+                        if (nbPlayers == 0) {
+                            channel.sendMessage("La partie est déjà complète").queue();
+                            return;
+                        }
+                        listUsers.add(author);
+                        listPlayers.add(new Player(author.getName(), Integer.parseInt(author.getId()), msg.substring(9)));
+                        nbPlayers--;
+                        if (nbPlayers == 0) {
+                            channel.sendMessage("Tous les joueurs sont près, les instructions vont vous être envoyé par message perso").queue();
+
+                            /*****début draft************/
+
+                            gamePlayers = listUsers.size();
+
+
+                            /****************************/
+                        }
+
+                    } else {
+                        channel.sendMessage("Vous n'avez pas choisi le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
                     }
-                    players[nbPlayers-1] = author;
-                    nbPlayers--;
-                    if(nbPlayers == 0) {
-                        channel.sendMessage("Tous les joueurs sont près, les instructions vont vous être envoyé par message perso").queue();
-
-                        /*****début draft************/
-
-                        gamePlayers = players.length;
-
-
-                        /****************************/
-                    }
-
-                }else
-                {
-                    channel.sendMessage("Vous n'avez pas choisi le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
+                } else {
+                    channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
                 }
-            }else
-            {
-                channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
             }
         }
 
@@ -339,9 +344,8 @@ public class Main extends ListenerAdapter
                 if (stepBD) {
                     if (msg.length() > 10) {
                         nbPlayers = parseInt(msg.substring(11));
-                        players = new User[nbPlayers];
                         stepNbPlayers = true;
-                        channel.sendMessage("OK " + players[0]).queue();
+                        channel.sendMessage("OK").queue();
                     } else {
                         channel.sendMessage("Donnez le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
                     }
