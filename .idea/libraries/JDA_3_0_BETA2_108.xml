@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="JDA-3.0.BETA2_108">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.0.BETA2_108.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.0.BETA2_108-withDependencies.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.0.BETA2_108-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.0.BETA2_108-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
