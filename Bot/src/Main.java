@@ -72,7 +72,7 @@ public class Main extends ListenerAdapter
         {
             JDA jda = new JDABuilder(AccountType.BOT)
                     .setToken("MjQ2MDA4ODI5MTMxNzUxNDI0.C2U8EQ.0wSKoPwzJ9-XuFRY-5ANO0rUkNk")           //The token of the account that is logging in.
-                    .addListener(new Main())  //An instance of a class that will handle events.
+                    .addEventListener(new Main())  //An instance of a class that will handle events.
                     .buildBlocking();  //There are 2 ways to login, blocking vs async. Blocking guarantees that JDA will be completely loaded.
         }
         catch (LoginException e)
@@ -183,9 +183,9 @@ public class Main extends ListenerAdapter
             //This will send a message, "pong!", by constructing a RestAction and "queueing" the action with the Requester.
             // By calling queue(), we send the Request to the Requester which will send it to discord. Using queue() or any
             // of its different forms will handle ratelimiting for you automatically!
-
             author.openPrivateChannel();
             author.getPrivateChannel().sendMessage("pong").queue();
+
         }
         else if (msg.equals("-roll"))
         {
@@ -281,24 +281,36 @@ public class Main extends ListenerAdapter
         }
         else if (msg.equals("-block"))
         {
-            //This is an example of how to use the block() method on RestAction. The block method acts similarly to how
+            //This is an example of how to use the complete() method on RestAction. The complete method acts similarly to how
             // JDABuilder's buildBlocking works, it waits until the request has been sent before continuing execution.
-            //Most developers probably wont need this and can just use queue. If you use block, JDA will still handle ratelimit
-            // control, however it won't queue the Request to be sent after the ratelimit retry after time is past. It
+            //Most developers probably wont need this and can just use queue. If you use complete, JDA will still handle ratelimit
+            // control, however if shouldQueue is false it won't queue the Request to be sent after the ratelimit retry after time is past. It
             // will instead fire a RateLimitException!
-            //One of the major advantages of block() is that it returns the object that queue's success consumer would have,
+            //One of the major advantages of complete() is that it returns the object that queue's success consumer would have,
             // but it does it in the same execution context as when the request was made. This may be important for most developers,
-            // but, honestly, queue is most likely what developers will want to use.
+            // but, honestly, queue is most likely what developers will want to use as it is faster.
 
             try
             {
-                //Note the fact that block returns the Message object!
-                Message sentMessage = channel.sendMessage("I blocked and will return the message!").block();
+                //Note the fact that complete returns the Message object!
+                //The complete() overload queues the Message for execution and will return when the message was sent
+                //It does handle rate limits automatically
+                Message sentMessage = channel.sendMessage("I blocked and will return the message!").complete();
+                //This should only be used if you are expecting to handle rate limits yourself
+                //The completion will not succeed if a rate limit is breached and throw a RateLimitException
+                Message sentRatelimitMessage = channel.sendMessage("I expect rate limitation and know how to handle it!").complete(false);
+
                 System.out.println("Sent a message using blocking! Luckly I didn't get Ratelimited... MessageId: " + sentMessage.getId());
             }
             catch (RateLimitedException e)
             {
-                System.out.println("Whoops! Got ratelimited when attempting to use a .block() on a RestAction! RetryAfter: " + e.getRetryAfter());
+                System.out.println("Whoops! Got ratelimited when attempting to use a .complete() on a RestAction! RetryAfter: " + e.getRetryAfter());
+            }
+            //Note that RateLimitException is the only checked-exception thrown by .complete()
+            catch (RuntimeException e)
+            {
+                System.out.println("Unfortunately something went wrong when we tried to send the Message and .complete() threw an Exception.");
+                e.printStackTrace();
             }
         }
 
@@ -308,7 +320,7 @@ public class Main extends ListenerAdapter
 
         //3ème étape : "inscription" des joueurs et début du draft (MP pour règles + premiers boosters)
         else if(msg.length()>=8) {
-            if (msg.substring(0,8).equals("-player")) {
+            if (msg.substring(0,7).equals("-player")) {
                 if (stepBD) {
                     if (stepNbPlayers) {
                         if (nbPlayers == 0) {
@@ -336,60 +348,52 @@ public class Main extends ListenerAdapter
                     channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
                 }
             }
-        }
-
-        else if(msg.length()>=10) {
-            //2ème étape : choix du nombre de joueurs
-            if (msg.substring(0, 10).equals("-nbPlayers")) {
-                if (stepBD) {
-                    if (msg.length() > 10) {
-                        nbPlayers = parseInt(msg.substring(11));
-                        stepNbPlayers = true;
-                        channel.sendMessage("OK").queue();
-                    } else {
-                        channel.sendMessage("Donnez le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
-                    }
-                } else {
-                    channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
-                }
-            }
-
-            else if(msg.length()>=11) {
-                //1ère étape : choix du .csv
-                if (msg.substring(0, 11).equals("-beginDraft")) {
-                    if (("" + msg.substring(msg.length() - 4)).equals(".csv")) {
-
-                        bdCards = new ArrayList<>();
-                        //lecture .csv pour remplir bdCards
-                        try
-                        {
-                            String chemin = msg.substring(12);
-                            BufferedReader fichier_source = new BufferedReader(new FileReader(chemin));
-                            String chaine;
-                            int i = 1;
-
-                            while((chaine = fichier_source.readLine())!= null)
-                            {
-                                if(i > 1)
-                                {
-                                    String[] tabChaine = chaine.split(";");
-                                    bdCards.add(new Card(tabChaine[0], tabChaine[1], Integer.parseInt(tabChaine[2])));
-                                }
-                                i++;
-                            }
-                            fichier_source.close();
-                            channel.sendMessage("BD de cartes OK").queue();
-
+       else if(msg.length()>=10) {
+                //2ème étape : choix du nombre de joueurs
+                if (msg.substring(0, 10).equals("-nbPlayers")) {
+                    if (stepBD) {
+                        if (msg.length() > 10) {
+                            nbPlayers = parseInt(msg.substring(11));
+                            stepNbPlayers = true;
+                            channel.sendMessage("OK").queue();
+                        } else {
                             channel.sendMessage("Donnez le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
-                            stepBD = true;
                         }
-                        catch (IOException e)
-                        {
-                            channel.sendMessage("Probleme import csv").queue();
-                            return;
+                    } else {
+                        channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
+                    }
+                } else if (msg.length() >= 11) {
+                    //1ère étape : choix du .csv
+                    if (msg.substring(0, 11).equals("-beginDraft")) {
+                        if (("" + msg.substring(msg.length() - 4)).equals(".csv")) {
+
+                            bdCards = new ArrayList<>();
+                            //lecture .csv pour remplir bdCards
+                            try {
+                                String chemin = msg.substring(12);
+                                BufferedReader fichier_source = new BufferedReader(new FileReader(chemin));
+                                String chaine;
+                                int i = 1;
+
+                                while ((chaine = fichier_source.readLine()) != null) {
+                                    if (i > 1) {
+                                        String[] tabChaine = chaine.split(";");
+                                        bdCards.add(new Card(tabChaine[0], tabChaine[1], Integer.parseInt(tabChaine[2])));
+                                    }
+                                    i++;
+                                }
+                                fichier_source.close();
+                                channel.sendMessage("BD de cartes OK").queue();
+
+                                channel.sendMessage("Donnez le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
+                                stepBD = true;
+                            } catch (IOException e) {
+                                channel.sendMessage("Probleme import csv").queue();
+                                return;
+                            }
+                        } else {
+                            channel.sendMessage("La commande doit être de la forme : -beginDraft [fichier.csv]").queue();
                         }
-                    }else {
-                        channel.sendMessage("La commande doit être de la forme : -beginDraft [fichier.csv]").queue();
                     }
                 }
             }

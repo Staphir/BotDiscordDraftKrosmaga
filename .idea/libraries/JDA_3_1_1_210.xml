@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="JDA-3.1.1_210">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.1.1_210.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.1.1_210-withDependencies.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.1.1_210-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/Bot/lib_JDA/build/libs/JDA-3.1.1_210-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
