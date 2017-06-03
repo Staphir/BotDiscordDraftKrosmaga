@@ -36,4 +36,12 @@ public class Player {
         return " Cartes " + classe + " :" + cartesClasse + "\nCartes neutres :" + cartesNeutres;
     }
 
+    public ArrayList<Card> getPlayerCards() {
+        return playerCards;
+    }
+
+    public String getName() {
+        return name;
+
+    }
 }

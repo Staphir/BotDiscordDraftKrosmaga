@@ -6,12 +6,9 @@ public class Card {
     private String name;
     private String rarity;
 
-    public int quantity;
-
-    public Card(String name, String rarity, int quantity) {
+    public Card(String name, String rarity) {
         this.name = name;
         this.rarity = rarity;
-        this.quantity = quantity;
     }
 
     public String getName() {
@@ -22,7 +19,5 @@ public class Card {
         return rarity;
     }
 
-    public int getQuantity() {
-        return quantity;
-    }
+
 }
