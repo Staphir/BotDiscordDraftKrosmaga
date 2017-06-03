@@ -186,7 +186,7 @@ public class Main extends ListenerAdapter
             // of its different forms will handle ratelimiting for you automatically!
             author.openPrivateChannel().queue((channelPrivate) ->
             {
-                channelPrivate.sendMessage("pong").complete();
+                channelPrivate.sendMessage("pong" + author.getId()).complete();
             });
 
         }
@@ -320,6 +320,16 @@ public class Main extends ListenerAdapter
 
         /***********************************************************Commandes Draft***************************************************************/
 
+        else if(msg.equals("-viewCards")){
+            for(int i=0; i<listUsers.size(); i++){
+                if(author.getName().equals(listPlayers.get(i).getName())){
+                    int finalI = i;
+                    author.openPrivateChannel().queue((privateChannel)->{
+                        privateChannel.sendMessage(listPlayers.get(finalI).getListCards()).complete();
+                    });
+                }
+            }
+        }
 
         //3ème étape : "inscription" des joueurs et début du draft (MP pour règles + premiers boosters)
         else if(msg.length()>=8) {
@@ -331,10 +341,10 @@ public class Main extends ListenerAdapter
                             return;
                         }
                         listUsers.add(author);
-                        listPlayers.add(new Player(author.getName(), Integer.parseInt(author.getId()), msg.substring(9)));
+                        listPlayers.add(new Player(author.getName(), listUsers.size(), msg.substring(9)));
                         nbPlayers--;
                         if (nbPlayers == 0) {
-                            channel.sendMessage("Tous les joueurs sont près, les instructions vont vous être envoyé par message perso").queue();
+                            channel.sendMessage("Les " + listPlayers.size() + " joueurs sont prêts, les instructions vont vous être envoyé par message perso").queue();
 
                             /*****début draft************/
 
@@ -381,10 +391,7 @@ public class Main extends ListenerAdapter
                                     j++;
                                 }
                                 fichier_source.close();
-                                channel.sendMessage("BD de cartes OK").queue();
 
-                                channel.sendMessage("Donnez le nombre de joueurs avec la commande : -nbPlayers [nombre de joueurs]").queue();
-                                stepBD = true;
                             } catch (IOException e) {
                                 channel.sendMessage("Probleme import csv").queue();
                                 return;
@@ -401,16 +408,21 @@ public class Main extends ListenerAdapter
                                     }
                                 }
                             }
-
+                            int finalI = i;
+                            listUsers.get(i).openPrivateChannel().queue((privateChannel) -> {
+                                privateChannel.sendMessage(listPlayers.get(finalI).getListCards()).complete();
+                            });
                             break;
                         }
+                        channel.sendMessage("Dans la boucle").queue();
                     }
+                    channel.sendMessage("listPlayers.size : " + listPlayers.size()).queue();
                 }else{
                     channel.sendMessage("La commande doit être de la forme : -classe [fichier.csv]").queue();
                 }
             }
 
-       else if(msg.length()>=10) {
+            else if(msg.length()>=10) {
                 //2ème étape : choix du nombre de joueurs
                 if (msg.substring(0, 10).equals("-nbPlayers")) {
                     if (stepBD) {
