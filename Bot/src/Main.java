@@ -322,9 +322,11 @@ public class Main extends ListenerAdapter
 
         else if(msg.equals("-viewCards")){
             for(int i=0; i<listUsers.size(); i++){
+                //trouver emplacement de l'auteur dans la liste
                 if(author.getName().equals(listPlayers.get(i).getName())){
                     int finalI = i;
                     author.openPrivateChannel().queue((privateChannel)->{
+                        //affichage liste des cartes
                         privateChannel.sendMessage(listPlayers.get(finalI).getListCards()).complete();
                     });
                 }
@@ -334,20 +336,28 @@ public class Main extends ListenerAdapter
         //3ème étape : "inscription" des joueurs et début du draft (MP pour règles + premiers boosters)
         else if(msg.length()>=8) {
             if (msg.substring(0,7).equals("-player")) {
+                //partie à commence ?
                 if (stepBD) {
+                    //nb player donné ?
                     if (stepNbPlayers) {
+                        //plus de place dans la partie ?
                         if (nbPlayers == 0) {
                             channel.sendMessage("La partie est déjà complète").queue();
                             return;
                         }
+                        //ajout dans la liste des authors
                         listUsers.add(author);
+                        //nouveau joueur dans la liste des joueurs---------------nom de la classe donnée après -player
                         listPlayers.add(new Player(author.getName(), listUsers.size(), msg.substring(9)));
+                        //une place de moins dans la partie
                         nbPlayers--;
+                        //partie remplie début du draft
                         if (nbPlayers == 0) {
                             channel.sendMessage("Les " + listPlayers.size() + " joueurs sont prêts, les instructions vont vous être envoyé par message perso").queue();
 
                             /*****début draft************/
 
+                            //envoie à chaque joueur la demande de cartes de la classe qu'ils veulent jouer
                             for(int i=0; i<listPlayers.size(); i++)
                             {
                                 listUsers.get(i).openPrivateChannel().queue((privateChannel) ->
@@ -368,13 +378,17 @@ public class Main extends ListenerAdapter
                 }
             }
 
+            //----------------------------tous les joueurs se sont inscrit et la demande de carte de classe est envoyée
             if(msg.substring(0,7).equals("-classe") && stepWaitClasse == true){
+                //bon type de fichier ( .csv ) ?
                 if(msg.substring(msg.length()-4).equals(".csv")){
                     for(int i=0; i<listPlayers.size(); i++){
-                        if(listPlayers.get(i).getName().equals(listUsers.get(i).getName())){
+                        //le joueur est dans la partie ?
+                        if(listPlayers.get(i).getName().equals(author.getName())){
 
                             //création liste cartes classe d'un joueur
                             ArrayList<Card> listCardTmp = new ArrayList<>();
+                            //lecture du fichier
                             try {
                                 String chemin = msg.substring(8);
                                 BufferedReader fichier_source = new BufferedReader(new FileReader(chemin));
@@ -384,8 +398,10 @@ public class Main extends ListenerAdapter
                                 while ((chaine = fichier_source.readLine()) != null) {
                                     if (j > 1) {
                                         String[] tabChaine = chaine.split(";");
+                                        //création de carte le nombre de fois qu'elle existe
                                         for(int k=0; k<Integer.parseInt(tabChaine[2]); k++) {
-                                            bdCards.add(new Card(tabChaine[0], tabChaine[1]));
+                                            //nouvelle carte dans la liste de toutes les cartes de classe possible pour le joueur
+                                            listCardTmp.add(new Card(tabChaine[0], tabChaine[1]));
                                         }
                                     }
                                     j++;
@@ -399,12 +415,15 @@ public class Main extends ListenerAdapter
 
                             //remplissage aléatoire de la liste de cartes du joueur
                             for(int l=0; l<15; l++){
-                                Card tmpCard = tirageCarte(listPlayers.get(i).getPlayerCards());
+                                //tirage carte aléatoire parmis la liste donnée par le joueur
+                                Card tmpCard = tirageCarte(listCardTmp);
+                                //ajout de la carte dans la liste du joueur
                                 listPlayers.get(i).addCard(tmpCard);
-                                for(int m=0; m<listPlayers.size(); m++){
-                                    if(listPlayers.get(m).getName().equals(tmpCard.getName())){
-                                        listPlayers.remove(m);
-                                        m=listPlayers.size();
+                                //parcours de toutes les cartes de la liste donnée par le joueur pour supprimer celle qui vient d'être ajouté
+                                for(int m=0; m<listCardTmp.size(); m++){
+                                    if(listCardTmp.get(m).getName().equals(tmpCard.getName())){
+                                        listCardTmp.remove(m);
+                                        m=listCardTmp.size();
                                     }
                                 }
                             }
@@ -423,6 +442,7 @@ public class Main extends ListenerAdapter
             }
 
             else if(msg.length()>=10) {
+
                 //2ème étape : choix du nombre de joueurs
                 if (msg.substring(0, 10).equals("-nbPlayers")) {
                     if (stepBD) {
@@ -437,8 +457,10 @@ public class Main extends ListenerAdapter
                         channel.sendMessage("Commencé par démarré un draft avec la commande : -beginDraft [fichier.csv]").queue();
                     }
                 } else if (msg.length() >= 11) {
+
                     //1ère étape : choix du .csv
                     if (msg.substring(0, 11).equals("-beginDraft")) {
+                        //bon format de fichier ?
                         if (("" + msg.substring(msg.length() - 4)).equals(".csv")) {
 
                             bdCards = new ArrayList<>();
@@ -480,11 +502,13 @@ public class Main extends ListenerAdapter
     {
         String rareté = "";
         int nbRarete = 0;
+
         int nbCommun =  getNbRarete("C", listCard);
         int nbUncomm =  getNbRarete("U", listCard);
         int nbRare =  getNbRarete("R", listCard);
         int nbKros =  getNbRarete("K", listCard);
         int nbInfi =  getNbRarete("I", listCard);
+
         //tirage rareté
         int tirageRareté = (int) (Math.random()*100);
         if(tirageRareté<30 && nbCommun!=0)rareté="C";nbRarete=nbCommun;
