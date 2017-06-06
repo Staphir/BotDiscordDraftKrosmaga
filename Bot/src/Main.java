@@ -29,9 +29,7 @@ import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -120,8 +118,7 @@ public class Main extends ListenerAdapter
     public void onMessageReceived(MessageReceivedEvent event)
     {
         //initialisations
-        listUsers = new ArrayList<>();
-        listPlayers = new ArrayList<>();
+
 
         //These are provided with every event in JDA
         JDA jda = event.getJDA();                       //JDA, the core of the api.
@@ -345,10 +342,12 @@ public class Main extends ListenerAdapter
                             channel.sendMessage("La partie est déjà complète").queue();
                             return;
                         }
+                        listUsers = new ArrayList<>();
+                        listPlayers = new ArrayList<>();
                         //ajout dans la liste des authors
                         listUsers.add(author);
                         //nouveau joueur dans la liste des joueurs---------------nom de la classe donnée après -player
-                        listPlayers.add(new Player(author.getName(), listUsers.size(), msg.substring(9)));
+                        listPlayers.add(new Player(author.getName(), listUsers.size(), msg.substring(8)));
                         //une place de moins dans la partie
                         nbPlayers--;
                         //partie remplie début du draft
@@ -396,7 +395,7 @@ public class Main extends ListenerAdapter
                                 int j = 1;
 
                                 while ((chaine = fichier_source.readLine()) != null) {
-                                    if (j > 1) {
+                                    if (j >= 1) {
                                         String[] tabChaine = chaine.split(";");
                                         //création de carte le nombre de fois qu'elle existe
                                         for(int k=0; k<Integer.parseInt(tabChaine[2]); k++) {
@@ -435,7 +434,6 @@ public class Main extends ListenerAdapter
                         }
                         channel.sendMessage("Dans la boucle").queue();
                     }
-                    channel.sendMessage("listPlayers.size : " + listPlayers.size()).queue();
                 }else{
                     channel.sendMessage("La commande doit être de la forme : -classe [fichier.csv]").queue();
                 }
@@ -472,7 +470,7 @@ public class Main extends ListenerAdapter
                                 int i = 1;
 
                                 while ((chaine = fichier_source.readLine()) != null) {
-                                    if (i > 1) {
+                                    if (i >= 1) {
                                         String[] tabChaine = chaine.split(";");
                                         for(int k=0; k<Integer.parseInt(tabChaine[2]); k++) {
                                             bdCards.add(new Card(tabChaine[0], tabChaine[1]));
@@ -500,8 +498,9 @@ public class Main extends ListenerAdapter
 
     public Card tirageCarte(ArrayList<Card> listCard)
     {
+
         String rareté = "";
-        int nbRarete = 0;
+        int nbRarete = -1;
 
         int nbCommun =  getNbRarete("C", listCard);
         int nbUncomm =  getNbRarete("U", listCard);
@@ -509,24 +508,40 @@ public class Main extends ListenerAdapter
         int nbKros =  getNbRarete("K", listCard);
         int nbInfi =  getNbRarete("I", listCard);
 
-        //tirage rareté
-        int tirageRareté = (int) (Math.random()*100);
-        if(tirageRareté<30 && nbCommun!=0)rareté="C";nbRarete=nbCommun;
-        if(tirageRareté>29 && tirageRareté<60 && nbUncomm!=0)rareté="U";nbRarete=nbUncomm;
-        if(tirageRareté>59 && tirageRareté<75 && nbRare!=0)rareté="R";nbRarete=nbRare;
-        if(tirageRareté>74 && tirageRareté<90 && nbKros!=0)rareté="K";nbRarete=nbKros;
-        if(tirageRareté>89 && tirageRareté<101 && nbInfi!=0)rareté="I";nbRarete=nbInfi;
+        while(nbRarete <= 0) {
+            //tirage rareté
+            int tirageRareté = (int) (Math.random() * 100);
 
+            if (tirageRareté < 30 && nbCommun != 0) {
+                rareté = "C";
+                nbRarete = nbCommun;
+            }
+            if (tirageRareté > 29 && tirageRareté < 60 && nbUncomm != 0) {
+                rareté = "U";
+                nbRarete = nbUncomm;
+            }
+            if (tirageRareté > 59 && tirageRareté < 75 && nbRare != 0) {
+                rareté = "R";
+                nbRarete = nbRare;
+            }
+            if (tirageRareté > 74 && tirageRareté < 90 && nbKros != 0) {
+                rareté = "K";
+                nbRarete = nbKros;
+            }
+            if (tirageRareté > 89 && nbInfi != 0) {
+                rareté = "I";
+                nbRarete = nbInfi;
+            }
+        }
         //list tmp de cartes de la rareté tiré aléatoirement
         ArrayList<Card> listTmp = new ArrayList<>();
-        for(int i=0; i<nbRarete; i++){
+        for(int i=0; i<listCard.size(); i++){
             if(listCard.get(i).getRarity().equals(rareté)){
                 listTmp.add(listCard.get(i));
             }
         }
-
         //tirage carte
-        Card choosedCard = listTmp.get((int)Math.random()*nbRarete);
+        Card choosedCard = listTmp.get((int)Math.random()*listTmp.size());
 
         return choosedCard;
     }
